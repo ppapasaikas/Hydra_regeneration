@@ -1,0 +1,12 @@
+[
+  {
+    "index": "salmon_1.9.0_Hydra_105v3.primary_assembly_spliced_intron_separate_fl50_k23_gentrome.sidx",
+    "source": "NCBI",
+    "organism": "Hydra vulgaris",
+    "release": "v3",
+    "genome": "Hydra105_v3",
+    "fasta": ["/tungstenfs/groups/gbioinfo/DB/genomes/Hydra_vulgaris_105_v3/refsalmon_spliced_intron/spliced_intron_separate_fl50/Hydra_105v3.primary_assembly_spliced_intron_separate_fl50.fa"],
+    "gtf": "/tungstenfs/groups/gbioinfo/DB/genomes/Hydra_vulgaris_105_v3/refsalmon_spliced_intron/spliced_intron_separate_fl50/Hydra_105v3.primary_assembly_spliced_intron_separate_fl50.gtf",
+    "sha256": "69cc911b53481a900ee83f1c289bd7203486442d4a8739cab75cf7ea3a42ac40"
+  }
+]
