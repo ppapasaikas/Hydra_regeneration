@@ -1,5 +1,6 @@
-##   1. SIMPLE PROJECTIONS (PCA, tSNE)
-##   2. Princurve analysis
+## Preprocessing of BulkRNAseq Tip Regeraration data and generation of:
+##   1. Simple Projections (PCA, tSNE)
+##   2. Principal curve analysis
 
 library(rsvd)
 library(matrixStats)
@@ -10,15 +11,8 @@ library(tibble)
 library(princurve)
 
 
-## Paths
-## 
 
-XenonPath <- "/tungstenfs/groups/gbioinfo/"
-setwd(paste(XenonPath, "papapana/FMI_groups/Group_Tsiairis/", sep = ""))
-
-
-#
-#helpers 
+#### helper functions: 
 # 
 select_variable_genes <- function(m, f) {
     zeroes <- which(rowSums(m) <= max(1, min(rowSums(m))))
@@ -94,22 +88,9 @@ p2star <- function(p) {
 
 
 
-### sample-count matrices
-
-SampleInfo1 <- read.delim("Segmentation_Data/1984_SampleSheet.txt", stringsAsFactors = FALSE)
-SampleInfo2 <- read.delim("Segmentation_Data/3347_SampleSheet_corrected.txt", stringsAsFactors = FALSE)
-SampleInfo2$SampleName <- gsub(".+_", "", SampleInfo2$ExternalName)
-SampleInfo2 <- SampleInfo2[, c(1, 3)]
-
-SampleInfoTips <- rbind(SampleInfo1, SampleInfo2)
-SampleInfoTips$time <- gsub("[AB]", "", SampleInfoTips$SampleName)
-SampleInfoTips$ID <- gsub("-.*", "", SampleInfoTips$ID)
-SampleInfoTips <- unique(SampleInfoTips)
-rownames(SampleInfoTips) <- SampleInfoTips$SampleName
-
-SampleCountsM1 <- readRDS("Segmentation_Data/Analysis/RDS_files/TIPS_SampleCounts_NewAssembly.rds")
-SampleCountsM2 <- readRDS("Segmentation_Data/Analysis/RDS_files/TIPS2_SampleCounts_NewAssembly.rds")
-SampleCountsM <- cbind(SampleCountsM1, SampleCountsM2)
+### sample-count matrices and annotation
+SampleInfoTips <- readRDS("ref_data/TipRNAseq_SampleInfo.rds")
+SampleCountsM <- readRDS("ref_data/TipRNAseq_SampleCounts.rds")
 
 orderSmpl <- SampleInfoTips$SampleName[order(as.numeric(SampleInfoTips$time), SampleInfoTips$SampleName)]
 SampleCountsM <- SampleCountsM[, orderSmpl]
@@ -131,25 +112,27 @@ LNCounts <- log2(NSampleCounts + 2)
 Log_SampleCounts <- LNCounts
 times <- as.numeric(gsub("[a-zA-Z]", "", colnames(Log_SampleCounts)))
 
-## Batch correction
-## Log_SampleCounts.cor2 is the median-corrected version.
+
+
+## Stepwise batch correction of time-series samples by aligning neighboring time-point gene-wise medians/means.
+## Log_SampleCounts.corMd is the median-corrected version.
 Delta <- rowMedians(LNCounts[, 20:25]) - rowMedians(LNCounts[, 26:31])
 Log_SampleCounts.cor <- LNCounts
 Log_SampleCounts.cor[, 1:25] <- sweep(Log_SampleCounts.cor[, 1:25], 1, Delta, FUN = "-")
 
 Delta2 <- rowMedians(Log_SampleCounts.cor[, 42:47]) - rowMedians(Log_SampleCounts.cor[, 48:53])
-Log_SampleCounts.cor2 <- Log_SampleCounts.cor
-Log_SampleCounts.cor2[, 1:47] <- sweep(Log_SampleCounts.cor[, 1:47], 1, Delta2, FUN = "-")
+Log_SampleCounts.corMd <- Log_SampleCounts.cor
+Log_SampleCounts.corMd[, 1:47] <- sweep(Log_SampleCounts.cor[, 1:47], 1, Delta2, FUN = "-")
 
 
-## Log_SampleCounts.cor3 is the mean-corrected version.
+## Log_SampleCounts.corMn is the mean-corrected version.
 Delta <- rowMeans(LNCounts[, 20:25]) - rowMeans(LNCounts[, 26:31])
 Log_SampleCounts.cor <- LNCounts
 Log_SampleCounts.cor[, 1:25] <- sweep(Log_SampleCounts.cor[, 1:25], 1, Delta, FUN = "-")
 
-Log_SampleCounts.cor3 <- Log_SampleCounts.cor
+Log_SampleCounts.corMn <- Log_SampleCounts.cor
 Delta2 <- rowMeans(Log_SampleCounts.cor[, 42:47]) - rowMeans(Log_SampleCounts.cor[, 48:53])
-Log_SampleCounts.cor3[, 1:47] <- sweep(Log_SampleCounts.cor[, 1:47], 1, Delta, FUN = "-")
+Log_SampleCounts.corMn[, 1:47] <- sweep(Log_SampleCounts.cor[, 1:47], 1, Delta, FUN = "-")
 
 ## Gene set for tip PCA/pseudotime.
 nzeroes <- which(rowSums(NSampleCounts > 0) > 4)
@@ -160,7 +143,7 @@ exp.genes <- intersect(rownames(NSampleCounts[expr, ]), nz.genes)
 
 var.genes.strict <- select_variable_genes(NSampleCounts[exp.genes, ], 0.5919632)
 
-Data <- Log_SampleCounts.cor3[var.genes.strict, ]
+Data <- Log_SampleCounts.corMn[var.genes.strict, ]
 
 ## Tip PCA and principal-curve pseudotime.
 PC <- rsvd::rpca(
@@ -199,16 +182,15 @@ pt.ord.use <- pt.ord
 time.filt <- times[-rem2]
 names(time.filt) <- colnames(Data)[-rem2]
 
-TipData <- Log_SampleCounts.cor2[, names(pt.ord.use)]
+TipData <- Log_SampleCounts.corMd[, names(pt.ord.use)]
 
 
 
 ## Segment counts 
-
 SampleInfo <- read.delim("Segmentation_Data/SampleSheet.txt", stringsAsFactors = FALSE)
 Segments <- as.vector(unique(SampleInfo$Description))
 
-SampleCountsS <- readRDS("Segmentation_Data/Analysis/RDS_files/Segments_SampleCounts_NewAssembly.rds")
+SampleCountsS <- readRDS("Segmentation_Data/Analysis/RDS_files/Segments_SampleCounts.rds")
 
 remS <- grep("3_8", colnames(SampleCountsS))
 if (length(remS) > 0) {

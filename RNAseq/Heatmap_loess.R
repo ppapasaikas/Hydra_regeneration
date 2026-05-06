@@ -1,15 +1,15 @@
+## Produce Heatmap of Tip Regeneration data using:
+# selected variable genes
+# loess smoothing
+# Ordering of the data according to correlation to Wnt3 (100203050)
+
 library(ComplexHeatmap)
 library(circlize)
 
 
 ## Paths and parameters
-
-
-XenonPath <- "/tungstenfs/groups/gbioinfo/"
-setwd(paste(XenonPath, "papapana/FMI_groups/Group_Tsiairis/", sep = ""))
-
-input_file <- "Segmentation_Data/Analysis/Data_tables/FullTips_new_assembly_corrected_var_genes.tsv"
-output_pdf <- "Segmentation_Data/Analysis/Figures/Tips_Heatmap_WntOrdering_LoessSmooth_03_02_2026.pdf"
+input_file <- "ref_data/TipReg_var_genes.tsv"
+output_pdf <- "Tips_Heatmap_WntOrdering_LoessSmooth.pdf"
 
 target_gene <- "100203050"
 ngrid <- 100L
