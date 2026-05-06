@@ -2,12 +2,12 @@
 
 # Usage:
 #   Rscript scripts/01_build_alevin_sce.R \
-#     data/alevin_samples.tsv \
-#     reference/Hydra_vulgaris_105_v3_processed.gff \
-#     reference/salmon_linkedtxome.json \
-#     reference/alevin_features.tsv \
-#     results/alevin_spliced_introns_separate_sce.rds \
-#     results/qc
+#     alevin_samples.tsv \
+#     Hydra_vulgaris_105_v3_processed.gff \
+#     salmon_linkedtxome.json \
+#     alevin_features.tsv \
+#     alevin_spliced_introns_separate_sce.rds \
+#     qc_dir
 #
 # Required sample sheet columns:
 #   sample_id    sample name, e.g. 2869F1
